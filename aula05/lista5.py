@@ -1,15 +1,14 @@
 # Função de processamento do programa
 def funcao_processamento():
-    qtd_ferro = float(input('Digite a quantidade de ferro: '))
-    qtd_ouro = float(input('Digite a quantidade de ouro: '))
+    agua_disponivel = float(input('Digite a quantidade de água(em litros) disponível: '))
+    distancia = float(input("Digite a distância(em km): "))
 
-    total_liga_metalica = qtd_ferro + qtd_ouro
+    agua_necessaria = distancia * 2
 
-    if (qtd_ferro/total_liga_metalica) >= 0.7:
-        print("A sua armadura é massa!")
+    if agua_disponivel >= agua_necessaria:
+        print(f'Essa água é suficiente!')
     else:
-        print("Essa armadura vai quebrar!")
-    
+        print(f'Essa água é insuficiente!')
 
 
 if __name__ == '__main__':

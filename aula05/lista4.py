@@ -1,15 +1,13 @@
 # Função de processamento do programa
 def funcao_processamento():
-    qtd_ferro = float(input('Digite a quantidade de ferro: '))
-    qtd_ouro = float(input('Digite a quantidade de ouro: '))
+    qtd_25 = float(input('Digite a quantidade de moedas de 25 centavos: '))
+    qtd_1 = float(input('Digite a quantidade de moedas de 1 real: '))
+    qtd_50= float(input('Digite a quantidade de 50 centavos: '))
 
-    total_liga_metalica = qtd_ferro + qtd_ouro
+    total = qtd_25 + qtd_1 + qtd_50
 
-    if (qtd_ferro/total_liga_metalica) >= 0.7:
-        print("A sua armadura é massa!")
-    else:
-        print("Essa armadura vai quebrar!")
-    
+    if total:
+        print(f'Esse é o total de moedas: {total}!')
 
 
 if __name__ == '__main__':
