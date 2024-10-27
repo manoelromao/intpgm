@@ -13,7 +13,7 @@ def funcao_processamento():
         print(f'O primeiro dragão é mais rápido!')
     if tempo2 > tempo1:
         print(f'O segundo dragão é mais rápido!')
-    else:
+    if tempo1 == tempo2:
         print(f'Os dois tem a mesma velocidade!')
 
 
