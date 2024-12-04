@@ -1,129 +1,123 @@
 import requests
-from googletrans import Translator
 from deep_translator import GoogleTranslator
 
-def buscar_conselhos_traduzidos():
-    try:
-        response = requests.get("https://api.adviceslip.com/advice")
-        if response.status_code == 200:
-            conselho = response.json()["slip"]["advice"]
-            log_acao(f"Conselho recebido: {conselho}")
-            return traduzir_para_portugues(conselho)
-        else:
-            log_acao("Erro ao acessar a API de conselhos.")
-            return "Erro ao acessar a API."
-    except Exception as e:
-        log_acao(f"Erro ao buscar conselhos: {e}")
-        return "Erro ao buscar conselhos."
 
-def salvar_conselhos(lista_conselhos, filename="conselhos.txt"):
-    try:
-        with open(filename, "a", encoding="utf-8") as file:
-            for conselho in lista_conselhos:
-                file.write(f"{conselho}\n")
-                log_acao(f"Conselho salvo: {conselho}")
-        print("Conselhos salvos com sucesso!")
-    except Exception as e:
-        log_acao(f"Erro ao salvar conselhos: {e}")
+def get_advice():
+    response = requests.get("https://api.adviceslip.com/advice")
+    if response.status_code == 200:
+        advice = response.json()["slip"]
+        return advice["id"], advice["advice"]
+    else:
+        return None, "Erro ao acessar a API."
 
-def ler_conselhos_salvos(filename="conselhos.txt"):
+
+def save_advice_to_file(advice_list, filename="conselhos.txt"):
+    with open(filename, "a", encoding="utf-8") as file:
+        for advice_id, advice in advice_list:
+            file.write(f"{advice_id} | {advice}\n")
+
+
+def read_saved_advice(filename="conselhos.txt"):
     try:
         with open(filename, "r", encoding="utf-8") as file:
             return file.readlines()
     except FileNotFoundError:
-        log_acao("Arquivo de conselhos não encontrado.")
-        return []
-    except Exception as e:
-        log_acao(f"Erro ao ler conselhos salvos: {e}")
         return []
 
-def traduzir_para_portugues(text):
+
+def translate_text(text, target_language="pt"):
+    translator = GoogleTranslator(source="auto", target=target_language)
+    return translator.translate(text)
+
+
+def save_translated_advice(advice, filename="conselhos_traduzidos.txt"):
+    with open(filename, "a", encoding="utf-8") as file:
+        file.write(advice + "\n")
+
+
+def read_translated_advice(filename="conselhos_traduzidos.txt"):
     try:
-        translator = Translator()
-        traducao = translator.translate(text, src="en", dest="pt")
-        return traducao.text
-    except Exception as e:
-        log_acao(f"Erro ao traduzir texto: {e}")
-        return "Erro ao traduzir."
+        with open(filename, "r", encoding="utf-8") as file:
+            return file.readlines()
+    except FileNotFoundError:
+        return []
 
-def traduzir_para_ingles(text):
-    try:
-        traducao = GoogleTranslator(source='pt', target='en').translate(text)
-        log_acao(f"Conselho traduzido para o inglês: {traducao}")
-        return traducao
-    except Exception as e:
-        log_acao(f"Erro ao traduzir texto: {e}")
-        return "Erro ao traduzir para o inglês."
 
-def log_acao(acao):
-    print(f"[LOG] {acao}")
-
-def menu():
+def main_menu():
     while True:
         print("\nMenu do Seu Zé:")
         print("1. Ouvir o Seu Zé (Receber conselhos traduzidos)")
-        print("2. Mostrar os Conselhos")
+        print("2. Mostrar os Conselhos (em português)")
         print("3. Guardar a Sabedoria (Salvar conselhos)")
-        print("4. Mostrar os Conselhos guardados")
-        print("5. Traduzir para o Gringo (Traduzir conselhos salvos para o inglês)")
+        print("4. Traduzir conselhos salvos para outro idioma")
+        print("5. Mostrar conselhos traduzidos")
         print("0. Sair")
-
-        escolha = input("Escolha uma opção: ")
-        log_acao(f"Opção selecionada: {escolha}")
-
-        if escolha == "1":
-            try:
-                count = int(input("Quantos conselhos deseja receber? "))
-                conselhos = [buscar_conselhos_traduzidos() for _ in range(count)]
+        
+        choice = input("Escolha uma opção: ")
+        
+        if choice == "1":
+            count = int(input("Quantos conselhos deseja receber? "))
+            conselhos = [get_advice() for _ in range(count)]
+            translated_conselhos = []
+            for i, (advice_id, advice) in enumerate(conselhos, 1):
+                if advice_id is not None:  
+                    translated_advice = translate_text(advice, target_language="pt")
+                    print(f"\nConselho {i} (ID: {advice_id}): {translated_advice}")
+                    translated_conselhos.append((advice_id, translated_advice))
+                else:
+                    print(f"\nConselho {i}: Erro ao buscar o conselho.")
+            save_advice_to_file(translated_conselhos)
+        
+        elif choice == "2":
+            conselhos = read_saved_advice()
+            if conselhos:
+                print("\nConselhos em português:")
+                for conselho in conselhos:
+                    print(conselho.strip().split("|")[1])  
+            else:
+                print("Nenhum conselho salvo ainda!")
+        
+        elif choice == "3":
+            count = int(input("Quantos conselhos deseja salvar? "))
+            conselhos = [get_advice() for _ in range(count)]
+            translated_conselhos = [(advice_id, translate_text(advice, target_language="pt")) for advice_id, advice in conselhos if advice_id is not None]
+            save_advice_to_file(translated_conselhos)
+            print("Conselhos traduzidos e salvos com sucesso!")
+        
+        elif choice == "4":
+            conselhos = read_saved_advice()
+            if conselhos:
+                print("\nConselhos salvos:")
                 for i, conselho in enumerate(conselhos, 1):
-                    print(f"\nConselho {i}: {conselho}")
-                log_acao(f"{count} conselhos exibidos.")
-            except ValueError:
-                log_acao("Erro: Entrada inválida para o número de conselhos.")
-
-        elif escolha == "2":
-            conselhos = ler_conselhos_salvos()
-            if conselhos:
-                print("\nConselhos salvos:")
-                for conselho in conselhos:
-                    print(conselho.strip())
+                    print(f"{i}. {conselho.strip()}")
+                idx = int(input("Escolha o número do conselho para traduzir: ")) - 1
+                if 0 <= idx < len(conselhos):
+                    original = conselhos[idx].split("|")[1].strip()
+                    target_language = input("Para qual idioma deseja traduzir? (Ex: en, es, fr): ")
+                    translated = translate_text(original, target_language=target_language)
+                    print(f"\nConselho original: {original}")
+                    print(f"Conselho traduzido ({target_language}): {translated}")
+                    save_translated_advice(f"{original} -> {translated} ({target_language})")
+                else:
+                    print("Opção inválida!")
             else:
                 print("Nenhum conselho salvo ainda!")
-
-        elif escolha == "3":
-            try:
-                count = int(input("Quantos conselhos deseja salvar? "))
-                conselhos = [buscar_conselhos_traduzidos() for _ in range(count)]
-                salvar_conselhos(conselhos)
-            except ValueError:
-                log_acao("Erro: Entrada inválida para o número de conselhos.")
-
-        elif escolha == "4":
-            conselhos = ler_conselhos_salvos()
-            if conselhos:
-                print("\nConselhos salvos:")
-                for conselho in conselhos:
-                    print(conselho.strip())
+        
+        elif choice == "5":
+            traducoes = read_translated_advice()
+            if traducoes:
+                print("\nConselhos traduzidos na opção 4:")
+                for traducao in traducoes:
+                    print(traducao.strip())
             else:
-                print("Nenhum conselho salvo ainda!")
-
-        elif escolha == "5":
-            conselhos = ler_conselhos_salvos()
-            if conselhos:
-                print("\nConselhos traduzidos para o inglês:")
-                for conselho in conselhos:
-                    print(traduzir_para_ingles(conselho.strip()))
-            else:
-                print("Nenhum conselho salvo ainda para traduzir!")
-
-        elif escolha == "0":
-            log_acao("Saindo do programa.")
+                print("Nenhuma tradução realizada ainda!")
+        
+        elif choice == "0":
             print("Até logo, Seu Zé!")
             break
-
+        
         else:
-            log_acao("Erro: Opção inválida selecionada.")
             print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
-    menu()
+    main_menu()
